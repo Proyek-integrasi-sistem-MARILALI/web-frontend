@@ -49,7 +49,12 @@ export default function Footer() {
         <div className="h-full flex flex-col text-center sm:text-left">
           <h3 className="text-lg font-semibold mb-6">Home</h3>
           <ul className="space-y-2 text-sm">
-            <li className="hover:underline cursor-pointer">Landing</li>
+            <li 
+              onClick={() => navigate("/")} 
+              className="hover:underline cursor-pointer"
+            >
+              Landing
+            </li>
           </ul>
         </div>
 
@@ -57,9 +62,12 @@ export default function Footer() {
         <div className="h-full flex flex-col text-center sm:text-left">
           <h3 className="text-lg font-semibold mb-6">Explorer</h3>
           <ul className="space-y-2 text-sm">
-            <li>Area</li>
-            <li>Categories</li>
-            <li>Browser</li>
+            <li 
+              onClick={() => navigate("/explorer")} 
+              className="hover:underline cursor-pointer"
+            >
+              Browse
+            </li>
           </ul>
         </div>
 
@@ -67,8 +75,24 @@ export default function Footer() {
         <div className="h-full flex flex-col text-center sm:text-left">
           <h3 className="text-lg font-semibold mb-6">Planner</h3>
           <ul className="space-y-2 text-sm">
-            <li>List Planner</li>
-            <li>Add Plan</li>
+            <li 
+              onClick={() => navigate("/planner")} 
+              className="hover:underline cursor-pointer"
+            >
+              My Plans
+            </li>
+            <li 
+              onClick={() => navigate("/planner/create")} 
+              className="hover:underline cursor-pointer"
+            >
+              Create Plan
+            </li>
+            <li 
+              onClick={() => navigate("/history")} 
+              className="hover:underline cursor-pointer"
+            >
+              History
+            </li>
           </ul>
         </div>
 
@@ -76,9 +100,31 @@ export default function Footer() {
         <div className="h-full flex flex-col text-center sm:text-left">
           <h3 className="text-lg font-semibold mb-6">Profile</h3>
           <ul className="space-y-2 text-sm">
-            <li>My Account</li>
-            <li>Settings</li>
-            <li>Logout</li>
+            {isLoggedIn ? (
+              <>
+                <li 
+                  onClick={() => navigate("/profile")} 
+                  className="hover:underline cursor-pointer"
+                >
+                  My Account
+                </li>
+              </>
+            ) : (
+              <>
+                <li 
+                  onClick={() => navigate("/login")} 
+                  className="hover:underline cursor-pointer"
+                >
+                  Login
+                </li>
+                <li 
+                  onClick={() => navigate("/signup")} 
+                  className="hover:underline cursor-pointer"
+                >
+                  Sign Up
+                </li>
+              </>
+            )}
           </ul>
         </div>
 

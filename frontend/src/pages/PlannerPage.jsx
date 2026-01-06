@@ -1,71 +1,123 @@
-import React from "react";
-import Navbar from "../components/navbar";
+import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import { itineraryService, activityService } from "../services/api.service";
 import PlanCard from "../components/PlanCard";
 
-const mockPlans = [
-  {
-    title: "Jalan Jalan",
-    type: "Culture",
-    location: "Jimbaran - Bedugul",
-    duration: "3 Days",
-    budget: "2.000.000",
-    imageUrls: [
-      "https://images.unsplash.com/photo-1546484406-f138810c9c7e?auto=format&fit=crop&w=150&h=150&q=80",
-      "https://images.unsplash.com/photo-1565548671754-0e367c00e62d?auto=format&fit=crop&w=150&h=150&q=80",
-      "https://images.unsplash.com/photo-1594968817637-e54972d56157?auto=format&fit=crop&w=150&h=150&q=80",
-    ],
-  },
-  {
-    title: "Liburan Bali",
-    type: "Nature",
-    location: "Uluwatu - Kuta",
-    duration: "2 Days",
-    budget: "1.500.000",
-    imageUrls: [
-      "https://images.unsplash.com/photo-1518548419970-58e3b4079ab2?auto=format&fit=crop&w=150&h=150&q=80",
-      "https://images.unsplash.com/photo-1537996194471-e657df975ab4?auto=format&fit=crop&w=150&h=150&q=80",
-      "https://images.unsplash.com/photo-1552674605-db6ffd4facb5?auto=format&fit=crop&w=150&h=150&q=80",
-    ],
-  },
-];
+const PlannerPage = () => {
+  const navigate = useNavigate();
+  const [plans, setPlans] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [planActivities, setPlanActivities] = useState({});
 
-// Tambahkan onEditPlan di dalam destructuring props
-const PlannerPage = ({ onNavigate, onCreatePlan, onEditPlan, plans, currentView }) => {
+  useEffect(() => {
+    fetchItineraries();
+  }, []);
+
+  const fetchItineraries = async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const data = await itineraryService.getAll();
+      setPlans(data);
+      
+      // Fetch activities for each itinerary to get destination images
+      const activitiesMap = {};
+      await Promise.all(
+        data.map(async (plan) => {
+          try {
+            const activities = await activityService.getByItinerary(plan.id);
+            activitiesMap[plan.id] = activities;
+          } catch (error) {
+            console.error(`Failed to fetch activities for itinerary ${plan.id}:`, error);
+            activitiesMap[plan.id] = [];
+          }
+        })
+      );
+      setPlanActivities(activitiesMap);
+    } catch (error) {
+      console.error('Failed to fetch itineraries:', error);
+      setError('Failed to load plans. Please try again.');
+      setPlans([]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const getItineraryCategory = (itinerary) => {
+    return itinerary?.category || 'General';
+  };
   return (
     <div className="min-h-screen bg-gray-50 font-sans">
-      <Navbar onNavigate={onNavigate} currentView={currentView} />
-
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="flex justify-between items-center mb-10">
           <h1 className="text-3xl font-bold text-black">List Plan</h1>
 
           <button
-            onClick={onCreatePlan}
+            onClick={() => navigate("/planner/create")}
             className="px-5 py-2 bg-[#00A9E0] text-white text-xl font-bold rounded-xl shadow-md hover:bg-blue-600 transition-all active:scale-95"
           >
             Create Plan
           </button>
         </div>
 
-        <div className="space-y-6">
-          {mockPlans.map((plan, index) => (
-            <div
-              key={index}
-              /* PASANG onEditPlan DI SINI */
-              onClick={onEditPlan}
-              className="cursor-pointer transition-transform hover:scale-[1.01] active:scale-100"
+        {error && (
+          <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg text-red-700">
+            {error}
+          </div>
+        )}
+
+        {loading ? (
+          <div className="space-y-6">
+            {[...Array(3)].map((_, i) => (
+              <div key={i} className="bg-white rounded-lg shadow-md p-6 animate-pulse">
+                <div className="h-6 bg-gray-200 rounded mb-4 w-1/3"></div>
+                <div className="h-4 bg-gray-200 rounded mb-2 w-1/2"></div>
+                <div className="h-4 bg-gray-200 rounded mb-2 w-2/3"></div>
+                <div className="h-4 bg-gray-200 rounded w-1/4"></div>
+              </div>
+            ))}
+          </div>
+        ) : plans.length === 0 ? (
+          <div className="text-center py-16 bg-white rounded-lg shadow-md">
+            <div className="text-6xl mb-4"></div>
+            <h3 className="text-2xl font-semibold text-gray-700 mb-2">
+              No travel plans yet
+            </h3>
+            <p className="text-gray-500 mb-6">
+              Start planning your next adventure!
+            </p>
+            <button
+              onClick={() => navigate("/planner/create")}
+              className="px-5 py-2 bg-[#00A9E0] text-white font-bold rounded-xl hover:bg-blue-600 transition"
             >
-              <PlanCard
-                title={plan.title}
-                type={plan.type}
-                location={plan.location}
-                duration={plan.duration}
-                budget={plan.budget}
-                imageUrls={plan.imageUrls}
-              />
-            </div>
-          ))}
-        </div>
+              Create Your First Plan
+            </button>
+          </div>
+        ) : (
+          <div className="space-y-6">
+            {plans.map((plan) => (
+              <div
+                key={plan.id}
+                onClick={() => navigate(`/planner/${plan.id}/edit`)}
+                className="cursor-pointer transition-transform hover:scale-[1.01] active:scale-100"
+              >
+                <PlanCard
+                  title={plan.title}
+                  status={plan.status}
+                  destination_city={plan.destination_city}
+                  destination_country={plan.destination_country}
+                  start_date={plan.start_date}
+                  end_date={plan.end_date}
+                  budget={plan.budget}
+                  thumbnail_url={plan.thumbnail_url}
+                  category={getItineraryCategory(plan)}
+                  activities={planActivities[plan.id] || []}
+                />
+              </div>
+            ))}
+          </div>
+        )}
       </main>
     </div>
   );

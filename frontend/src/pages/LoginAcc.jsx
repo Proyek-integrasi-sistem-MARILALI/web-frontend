@@ -9,20 +9,34 @@ export default function LoginAcc() {
   const [showPassword, setShowPassword] = useState(false);
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
 
   const navigate = useNavigate();
-  const { login } = useAuth(); // ⬅️ INI YANG KEMARIN HILANG
+  const { login } = useAuth();
 
-  const handleLogin = () => {
-    if (!username || !password) return;
+  const handleLogin = async () => {
+    if (!username || !password) {
+      setError("Please enter both email and password");
+      return;
+    }
 
-    // 🔐 SIMULASI LOGIN (nanti ganti API)
-    login({
-      name: username,
-      token: "dummy-token",
-    });
+    setLoading(true);
+    setError("");
 
-    navigate("/", { replace: true });
+    try {
+      const result = await login(username, password);
+      
+      if (result.success) {
+        navigate("/", { replace: true });
+      } else {
+        setError(result.error || "Login failed. Please check your credentials.");
+      }
+    } catch (err) {
+      setError("An unexpected error occurred. Please try again.");
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleSignUp = () => {
@@ -89,19 +103,26 @@ export default function LoginAcc() {
             </button>
           </div>
 
+          {/* ERROR MESSAGE */}
+          {error && (
+            <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded-xl mb-4">
+              {error}
+            </div>
+          )}
+
           {/* LOGIN BUTTON */}
           <button
             onClick={handleLogin}
-            disabled={!isFormValid}
+            disabled={!isFormValid || loading}
             className={`w-full font-semibold py-3 rounded-xl text-lg mt-2 transition
               ${
-                isFormValid
+                isFormValid && !loading
                   ? "bg-[#00A5D9] text-white hover:bg-sky-600"
                   : "bg-gray-300 text-gray-500 cursor-not-allowed"
               }
             `}
           >
-            Login
+            {loading ? "Logging in..." : "Login"}
           </button>
 
           {/* ===== SIGNUP (INI YANG KAMU MINTA) ===== */}

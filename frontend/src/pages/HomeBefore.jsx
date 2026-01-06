@@ -99,44 +99,6 @@ export default function HomeBefore() {
           ))}
         </div>
       </section>
-
-      {/* EXPLORE */}
-      <section className="w-full py-20 bg-white">
-        <div className="max-w-6xl mx-auto px-6">
-
-          <div className="grid md:grid-cols-2 items-center gap-10">
-
-            {/* TEXT + BUTTON RATA KANAN */}
-            <div className="flex flex-col items-end gap-6 pl-40">
-              <h2 className="text-4xl font-semibold leading-tight text-right">
-                Explore the awesome
-              </h2>
-
-              <button
-                onClick={() => navigate("/login")}
-                className="bg-sky-600 hover:bg-sky-700 text-white px-8 py-3 rounded-lg transition"
-              >
-                Explore plan
-              </button>
-            </div>
-
-            {/* KANAN — CARD */}
-            <div className="flex">
-              {trips.map((trip) => (
-                <div key={trip.id} className="max-w-[360px]">
-                  <TripCard
-                    {...trip}
-                    onDetail={() => console.log("Detail", trip.id)}
-                    onAddPlan={() => console.log("Add Plan", trip.id)}
-                  />
-                </div>
-              ))}
-            </div>
-
-          </div>
-
-        </div>
-      </section>
     </div>
   );
 }

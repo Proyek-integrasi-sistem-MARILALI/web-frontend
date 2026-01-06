@@ -1,15 +1,49 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
+import { useNavigate, useLocation, useSearchParams } from "react-router-dom";
 import { Search, Home, Map, Calendar, History } from "lucide-react";
 import logo from "../assets/logo.png";
+import { useAuth } from "../context/AuthContext";
 
-// Terima props onNavigate dan currentView dari App.jsx
-const Navbar = ({ onNavigate, currentView }) => {
+const Navbar = () => {
+  const navigate = useNavigate();
+  const location = useLocation();
+  const { isLoggedIn, user } = useAuth();
+  const [searchParams] = useSearchParams();
+  const [searchTerm, setSearchTerm] = useState("");
+
+  // Sync search term with URL params when location changes
+  useEffect(() => {
+    const urlSearch = searchParams.get('search') || '';
+    setSearchTerm(urlSearch);
+  }, [searchParams]);
+
+  const handleSearch = () => {
+    if (searchTerm.trim()) {
+      // Navigate to explorer with search parameter
+      navigate(`/explorer?search=${encodeURIComponent(searchTerm.trim())}`);
+    } else {
+      // Clear search if empty
+      navigate('/explorer');
+    }
+  };
+
+  const handleKeyPress = (e) => {
+    if (e.key === 'Enter') {
+      handleSearch();
+    }
+  };
+
   const navItems = [
-    { name: "Home", view: "home", icon: Home },
-    { name: "Explorer", view: "explorer", icon: Map },
-    { name: "Planner", view: "list", icon: Calendar }, // Planner arahkan ke 'list'
-    { name: "History", view: "history", icon: History },
+    { name: "Home", path: "/", icon: Home },
+    { name: "Explorer", path: "/explorer", icon: Map },
+    { name: "Planner", path: "/planner", icon: Calendar },
+    { name: "History", path: "/history", icon: History },
   ];
+
+  const isActive = (path) => {
+    if (path === "/") return location.pathname === "/";
+    return location.pathname.startsWith(path);
+  };
 
   return (
     <nav className="bg-white shadow-md sticky top-0 z-50">
@@ -19,11 +53,10 @@ const Navbar = ({ onNavigate, currentView }) => {
             {/* Logo Marilali */}
             <div
               className="shrink-0 flex items-center cursor-pointer"
-              onClick={() => onNavigate("list")} // Klik logo balik ke list
+              onClick={() => navigate("/")}
             >
               <img className="h-8 w-auto" src={logo} alt="Marilali Logo" />
               <span className="ml-2 text-xl font-bold text-blue-500 hidden sm:block">
-                Marilali
               </span>
             </div>
 
@@ -32,9 +65,15 @@ const Navbar = ({ onNavigate, currentView }) => {
               <input
                 type="text"
                 placeholder="Cari Destinasi..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                onKeyPress={handleKeyPress}
                 className="p-1 text-sm focus:outline-none bg-transparent w-64 ml-2"
               />
-              <button className="p-1 text-gray-400 hover:text-orange-500">
+              <button 
+                onClick={handleSearch}
+                className="p-1 text-gray-400 hover:text-orange-500 transition-colors"
+              >
                 <Search className="h-5 w-5" />
               </button>
             </div>
@@ -46,10 +85,10 @@ const Navbar = ({ onNavigate, currentView }) => {
               {navItems.map((item) => (
                 <button
                   key={item.name}
-                  onClick={() => onNavigate(item.view)} // Jalankan navigasi
+                  onClick={() => navigate(item.path)}
                   className={`
                     ${
-                      currentView === item.view
+                      isActive(item.path)
                         ? "border-b-2 border-blue-500 text-blue-600 font-bold"
                         : "text-gray-500 hover:text-gray-700 hover:border-b-2 hover:border-gray-300"
                     }
@@ -65,9 +104,10 @@ const Navbar = ({ onNavigate, currentView }) => {
             <div className="ml-4">
               <button
                 type="button"
+                onClick={() => navigate(isLoggedIn ? "/profile" : "/login")}
                 className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-[#00A9E0] hover:bg-blue-600 focus:outline-none"
               >
-                Dave
+                {isLoggedIn ? (user?.name || "User") : "Login"}
               </button>
             </div>
           </div>

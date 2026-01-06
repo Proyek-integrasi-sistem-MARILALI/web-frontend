@@ -9,12 +9,21 @@ const PlanItemCard = ({
   time,
   date,
   hasPayment,
+  onEdit,
+  activityId,
 }) => {
   return (
     <div className="bg-white border border-gray-200 rounded-xl p-3 flex shadow-sm">
       {/* Gambar */}
       <div className="w-32 h-32 shrink-0 rounded-lg overflow-hidden">
-        <img src={image} alt={title} className="w-full h-full object-cover" />
+        <img 
+          src={image} 
+          alt={title} 
+          className="w-full h-full object-cover"
+          onError={(e) => {
+            e.target.src = 'https://images.unsplash.com/photo-1537953773345-d172ccf13cf1?w=400';
+          }}
+        />
       </div>
 
       {/* Konten */}
@@ -37,7 +46,10 @@ const PlanItemCard = ({
 
         <div className="mt-3 flex items-center justify-between">
           <div className="flex gap-2">
-            <button className="px-3 py-1 bg-blue-500 text-white text-xs rounded hover:bg-blue-600">
+            <button 
+              onClick={() => onEdit && onEdit(activityId)}
+              className="px-3 py-1 bg-blue-500 text-white text-xs rounded hover:bg-blue-600"
+            >
               Edit
             </button>
             {hasPayment && (

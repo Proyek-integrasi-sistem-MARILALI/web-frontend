@@ -1,5 +1,6 @@
 import { useNavigate } from "react-router-dom";
 import { FaStar } from "react-icons/fa";
+import { useState } from "react";
 
 export default function LocationCard({
   id,
@@ -8,14 +9,28 @@ export default function LocationCard({
   description,
 }) {
   const navigate = useNavigate();
+  const [imageError, setImageError] = useState(false);
+  const [imageSrc, setImageSrc] = useState(image);
+  
+  // Fallback image - a placeholder or default image
+  const fallbackImage = "https://via.placeholder.com/400x300/4299e1/ffffff?text=No+Image+Available";
+
+  const handleImageError = () => {
+    if (!imageError) {
+      console.warn(`⚠️ External image failed for ${title}, using fallback`);
+      setImageError(true);
+      setImageSrc(fallbackImage);
+    }
+  };
 
   return (
     <div className="w-full bg-white shadow-lg rounded-lg overflow-hidden hover:shadow-xl transition">
       {/* IMAGE */}
       <img
-        src={image}
+        src={imageSrc}
         alt={title}
         className="w-full h-48 object-cover"
+        onError={handleImageError}
       />
 
       <div className="p-4">
