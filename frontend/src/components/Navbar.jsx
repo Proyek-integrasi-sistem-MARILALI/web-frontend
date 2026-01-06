@@ -1,214 +1,120 @@
-import { useState } from "react";
-import { useNavigate, useLocation } from "react-router-dom";
-import { FiSearch, FiMenu, FiX } from "react-icons/fi";
+import React, { useState, useEffect } from "react";
+import { useNavigate, useLocation, useSearchParams } from "react-router-dom";
+import { Search, Home, Map, Calendar, History } from "lucide-react";
 import logo from "../assets/logo.png";
 import { useAuth } from "../context/AuthContext";
 
-export default function Navbar() {
-  const [search, setSearch] = useState("");
-  const [open, setOpen] = useState(false);
-
+const Navbar = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { isLoggedIn } = useAuth();
+  const { isLoggedIn, user } = useAuth();
+  const [searchParams] = useSearchParams();
+  const [searchTerm, setSearchTerm] = useState("");
 
-  /* ================= ACTIVE MENU ================= */
-  const isActive = (path) => {
-    if (path === "/explorer") {
-      return location.pathname.startsWith("/explorer");
+  // Sync search term with URL params when location changes
+  useEffect(() => {
+    const urlSearch = searchParams.get('search') || '';
+    setSearchTerm(urlSearch);
+  }, [searchParams]);
+
+  const handleSearch = () => {
+    if (searchTerm.trim()) {
+      // Navigate to explorer with search parameter
+      navigate(`/explorer?search=${encodeURIComponent(searchTerm.trim())}`);
+    } else {
+      // Clear search if empty
+      navigate('/explorer');
     }
-    return location.pathname === path;
   };
 
-  const menuClass = (path) =>
-    isActive(path)
-      ? "text-sky-500 font-semibold"
-      : "text-gray-600 hover:text-sky-500";
-
-  const mobileMenuClass = (path) =>
-    isActive(path)
-      ? "bg-sky-50 text-sky-600 font-semibold"
-      : "text-gray-700 hover:bg-gray-100";
-
-  /* ================= NAVIGATION ================= */
-  const protectedNavigate = (path) => {
-    setOpen(false);
-    if (!isLoggedIn) navigate("/login");
-    else navigate(path);
+  const handleKeyPress = (e) => {
+    if (e.key === 'Enter') {
+      handleSearch();
+    }
   };
 
-  const navigateAndClose = (path) => {
-    setOpen(false);
-    navigate(path);
+  const navItems = [
+    { name: "Home", path: "/", icon: Home },
+    { name: "Explorer", path: "/explorer", icon: Map },
+    { name: "Planner", path: "/planner", icon: Calendar },
+    { name: "History", path: "/history", icon: History },
+  ];
+
+  const isActive = (path) => {
+    if (path === "/") return location.pathname === "/";
+    return location.pathname.startsWith(path);
   };
 
   return (
-    <nav className="w-full bg-white shadow-md">
-
-      {/* ================= DESKTOP (TIDAK DIUBAH) ================= */}
-      <div className="hidden lg:flex w-full items-center justify-between px-6 py-6">
-        {/* LEFT */}
-        <div className="flex items-center gap-6">
-          <div
-            onClick={() => navigate("/")}
-            className="flex items-center gap-2 cursor-pointer"
-          >
-            <img src={logo} alt="Marilali Logo" className="h-10 w-auto" />
-          </div>
-
-          <div className="relative ml-10">
-            <input
-              type="text"
-              placeholder="Cari Destinasi..."
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              className="w-[450px] px-4 py-2 border rounded-lg focus:ring-2 focus:ring-sky-300"
-            />
-            <FiSearch className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 text-xl" />
-          </div>
-        </div>
-
-        {/* RIGHT */}
-        <div className="flex items-center gap-10 text-lg font-medium">
-          <button onClick={() => navigate("/")} className={menuClass("/")}>
-            Home
-          </button>
-
-          <button
-            onClick={() => protectedNavigate("/explorer")}
-            className={menuClass("/explorer")}
-          >
-            Explorer
-          </button>
-
-          <button
-            onClick={() => protectedNavigate("/planner")}
-            className={menuClass("/planner")}
-          >
-            Planner
-          </button>
-
-          {isLoggedIn && (
-            <button
-              onClick={() => navigate("/history")}
-              className={menuClass("/history")}
+    <nav className="bg-white shadow-md sticky top-0 z-50">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="flex justify-between h-16">
+          <div className="flex items-center">
+            {/* Logo Marilali */}
+            <div
+              className="shrink-0 flex items-center cursor-pointer"
+              onClick={() => navigate("/")}
             >
-              History
-            </button>
-          )}
+              <img className="h-8 w-auto" src={logo} alt="Marilali Logo" />
+              <span className="ml-2 text-xl font-bold text-blue-500 hidden sm:block">
+              </span>
+            </div>
 
-          {!isLoggedIn ? (
-            <button
-              onClick={() => navigate("/login")}
-              className="px-5 py-2 border border-sky-400 text-sky-500 rounded-lg hover:bg-sky-50"
-            >
-              Log In
-            </button>
-          ) : (
-            <button
-              onClick={() => navigate("/profile")}
-              className={`px-4 py-2 border rounded-lg ${
-                isActive("/profile")
-                  ? "border-sky-500 text-sky-500 bg-sky-50"
-                  : "border-sky-400 text-sky-500 hover:bg-sky-50"
-              }`}
-            >
-              Dave
-            </button>
-          )}
-        </div>
-      </div>
-
-      {/* ================= MOBILE HEADER ================= */}
-      <div className="lg:hidden px-6 py-4 flex items-center justify-between">
-        <img
-          src={logo}
-          alt="Marilali Logo"
-          className="h-9 cursor-pointer"
-          onClick={() => navigate("/")}
-        />
-
-        <button onClick={() => setOpen(!open)} className="text-2xl">
-          {open ? <FiX /> : <FiMenu />}
-        </button>
-      </div>
-
-      {/* ================= MOBILE MENU (ANIMATED) ================= */}
-      <div
-        className={`lg:hidden overflow-hidden transition-all duration-300 ease-in-out ${
-          open ? "max-h-[600px] opacity-100" : "max-h-0 opacity-0"
-        }`}
-      >
-        <div className="px-4 pb-6">
-          <div className="bg-white rounded-xl shadow-md p-4 space-y-4">
-
-            {/* SEARCH */}
-            <div className="relative">
+            {/* Kolom Pencarian */}
+            <div className="hidden lg:ml-6 lg:flex lg:items-center border border-gray-300 rounded-lg p-1 bg-gray-50">
               <input
                 type="text"
                 placeholder="Cari Destinasi..."
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-sky-300"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                onKeyPress={handleKeyPress}
+                className="p-1 text-sm focus:outline-none bg-transparent w-64 ml-2"
               />
-              <FiSearch className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500" />
+              <button 
+                onClick={handleSearch}
+                className="p-1 text-gray-400 hover:text-orange-500 transition-colors"
+              >
+                <Search className="h-5 w-5" />
+              </button>
+            </div>
+          </div>
+
+          <div className="flex items-center">
+            {/* Navigasi Kanan */}
+            <div className="hidden sm:ml-6 sm:flex sm:space-x-8 h-full">
+              {navItems.map((item) => (
+                <button
+                  key={item.name}
+                  onClick={() => navigate(item.path)}
+                  className={`
+                    ${
+                      isActive(item.path)
+                        ? "border-b-2 border-blue-500 text-blue-600 font-bold"
+                        : "text-gray-500 hover:text-gray-700 hover:border-b-2 hover:border-gray-300"
+                    }
+                    inline-flex items-center px-1 pt-1 text-sm transition duration-150 ease-in-out h-full
+                  `}
+                >
+                  {item.name}
+                </button>
+              ))}
             </div>
 
-            {/* MENU */}
-            <div className="border-t pt-3 space-y-1 text-base font-medium">
+            {/* Tombol Profil */}
+            <div className="ml-4">
               <button
-                onClick={() => navigateAndClose("/")}
-                className={`w-full text-left px-4 py-2 rounded-lg transition ${mobileMenuClass("/")}`}
+                type="button"
+                onClick={() => navigate(isLoggedIn ? "/profile" : "/login")}
+                className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-[#00A9E0] hover:bg-blue-600 focus:outline-none"
               >
-                Home
+                {isLoggedIn ? (user?.name || "User") : "Login"}
               </button>
-
-              <button
-                onClick={() => protectedNavigate("/explorer")}
-                className={`w-full text-left px-4 py-2 rounded-lg transition ${mobileMenuClass("/explorer")}`}
-              >
-                Explorer
-              </button>
-
-              <button
-                onClick={() => protectedNavigate("/planner")}
-                className={`w-full text-left px-4 py-2 rounded-lg transition ${mobileMenuClass("/planner")}`}
-              >
-                Planner
-              </button>
-
-              {isLoggedIn && (
-                <button
-                  onClick={() => navigateAndClose("/history")}
-                  className={`w-full text-left px-4 py-2 rounded-lg transition ${mobileMenuClass("/history")}`}
-                >
-                  History
-                </button>
-              )}
             </div>
-
-            {/* AUTH */}
-            <div className="border-t pt-4">
-              {!isLoggedIn ? (
-                <button
-                  onClick={() => navigateAndClose("/login")}
-                  className="w-full py-2 border border-sky-400 text-sky-500 rounded-lg hover:bg-sky-50 transition"
-                >
-                  Log In
-                </button>
-              ) : (
-                <button
-                  onClick={() => navigateAndClose("/profile")}
-                  className="w-full py-2 border border-sky-400 text-sky-500 rounded-lg hover:bg-sky-50 transition"
-                >
-                  My Profile
-                </button>
-              )}
-            </div>
-
           </div>
         </div>
       </div>
     </nav>
   );
-}
+};
+
+export default Navbar;
